@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <div class="field">
+        <div class="racket player-racket">
+
+        </div>
+        <div class="racket pc-racket">
+
+        </div>
+
+        <div class="ball">
+            <div class="arrow"></div>
+        </div>
+    </div>
+
+</body>
+
+<style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 90vh;
+    }
+
+    .field {
+        display: flex;
+        background-color: #fff36c;
+        width: 700px;
+        height: 70vh;
+    }
+
+    .ball {
+        width: 50px;
+        height: 50px;
+        border-radius: 25px;
+        background-color: red;
+        position: absolute;
+    }
+
+    .racket {
+        width: 10px;
+        height: 100px;
+        background-color: black;
+        position: absolute;
+    }
+
+    .player-racket {
+        top: 300px;
+    }
+
+    .arrow {
+        height: 50px;
+        position: relative;
+        width: 10px;
+        background: black;
+        display: inline-block;
+        transform: rotate(90deg);
+    }
+
+    .arrow:before {
+        content: " ";
+        width: 10px;
+        background: black;
+        height: 35px;
+        position: absolute;
+        top: -10px;
+        transform: rotate(50deg);
+        left: -10px;
+    }
+
+    .arrow:after {
+        content: " ";
+        width: 10px;
+        background: black;
+        height: 35px;
+        position: absolute;
+        top: -10px;
+        transform: rotate(-50deg);
+        right: -10px;
+    }
+</style>
+
+<script>
+    const playerRacket = document.getElementsByClassName("player-racket")[0]
+    const pcRacket = document.getElementsByClassName("pc-racket")[0]
+    const ball = document.getElementsByClassName("ball")[0]
+    const field = document.getElementsByClassName("field")[0]
+    const arrow = document.getElementsByClassName("arrow")[0]
+    let racketInter;
+    let ballInter;
+
+    var rect = field.getBoundingClientRect();
+    console.log(rect.top, rect.right, rect.bottom, rect.left);
+    pcRacket.style.left = Math.round(rect.right - 10) + 'px'
+
+    ball.style.top = Math.round((rect.top + rect.bottom) / 2) + 'px';
+    ball.style.left = Math.round((rect.right + rect.left) / 2) + 'px';
+
+    function moveRacketSelection(evt) {
+        if (racketInter) {
+            clearTimeout(racketInter);
+        }
+
+        racketInter = setInterval(moveRacket, 10, evt)
+    }
+
+    function moveRacket(evt) {
+        switch (evt.keyCode) {
+            case 87:
+                playerRacket.style.top = (parseInt(getComputedStyle(playerRacket).top) - 10) + 'px';
+                break;
+            case 83:
+                playerRacket.style.top = (parseInt(getComputedStyle(playerRacket).top) + 10) + 'px';
+                break;
+        }
+    }
+
+    function moveBallSelection() {
+        if (ballInter) {
+            clearTimeout(ballInter);
+        }
+
+        ballInter = setInterval(moveBall, 1)
+    }
+
+    function toRadians(angle) {
+        return angle * (Math.PI / 180);
+    }
+    function getXOffset(angle) {
+        return Math.cos(toRadians(angle))
+    }
+
+    function getYOffset(angle) {
+        return Math.sin(toRadians(angle))
+    }
+
+    let angle = 20
+    let xPos = 400
+    let yPos = 400
+    const MULT = 1.5
+
+    function moveBall() {
+        if (parseInt(getComputedStyle(ball).left) > rect.right - ball.offsetWidth) {
+            if (angle >= 0 && angle < 90) {
+                angle += 90
+            } else {
+                angle -= 90
+            }
+        }
+
+        if (parseInt(getComputedStyle(ball).left) > rect.right - 100) {
+            pcRacket.style.top = getComputedStyle(ball).top
+        }
+
+        if (parseInt(getComputedStyle(ball).left) < rect.left + 5) {
+            const racketTop = parseInt(getComputedStyle(playerRacket).top)
+            const ballTop = parseInt(getComputedStyle(ball).top)
+
+            if (Math.abs(racketTop - ballTop) > 100) {
+                clearInterval(ballInter)
+            }
+
+            if (angle >= 90 && angle < 180) {
+                angle -= 90
+            } else {
+                angle += 90
+            }
+        }
+
+        if (parseInt(getComputedStyle(ball).top) > rect.bottom - ball.offsetWidth) {
+            if (angle >= 180 && angle < 270) {
+                angle -= 90
+            } else {
+                angle += 90
+            }
+        }
+
+        if (parseInt(getComputedStyle(ball).top) < rect.top + 5) {
+            if (angle >= 0 && angle < 90) {
+                angle -= 90
+            } else {
+                angle += 90
+            }
+        }
+
+        xPos += getYOffset(angle)
+        yPos += getXOffset(angle)
+
+        ball.style.top = Math.round(xPos) + 'px';
+        ball.style.left = Math.round(yPos) + 'px';
+        arrow.style.transform = "rotate(" + (90 + angle) + "deg)"
+    }
+    moveBallSelection()
+
+
+
+    function stopMovingRacket(evt) {
+        clearInterval(racketInter)
+        racketInter = null;
+    }
+
+    window.addEventListener('keydown', moveRacketSelection);
+    window.addEventListener('keyup', stopMovingRacket);
+</script>
+
+</html>
