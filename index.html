@@ -18,7 +18,8 @@
         </div>
 
         <div class="ball">
-            <div class="arrow"></div>
+            <span class="arrow">></span>
+            <div class="ball-info"></div>
         </div>
     </div>
 
@@ -59,34 +60,12 @@
     }
 
     .arrow {
-        height: 50px;
-        position: relative;
-        width: 10px;
-        background: black;
-        display: inline-block;
-        transform: rotate(90deg);
-    }
-
-    .arrow:before {
-        content: " ";
-        width: 10px;
-        background: black;
-        height: 35px;
         position: absolute;
-        top: -10px;
-        transform: rotate(50deg);
-        left: -10px;
-    }
-
-    .arrow:after {
-        content: " ";
-        width: 10px;
-        background: black;
-        height: 35px;
-        position: absolute;
-        top: -10px;
-        transform: rotate(-50deg);
-        right: -10px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-weight: bold;
+        font-size: 30pt;
+        top: 2px;
+        left: 12px;
     }
 </style>
 
@@ -96,6 +75,8 @@
     const ball = document.getElementsByClassName("ball")[0]
     const field = document.getElementsByClassName("field")[0]
     const arrow = document.getElementsByClassName("arrow")[0]
+    const ballInfo = document.getElementsByClassName("ball-info")[0]
+
     let racketInter;
     let ballInter;
 
@@ -117,12 +98,16 @@
     }
 
     function moveRacket(evt) {
+        console.log(evt.keyCode)
         switch (evt.keyCode) {
             case 87:
                 playerRacket.style.top = (parseInt(getComputedStyle(playerRacket).top) - 10) + 'px';
                 break;
             case 83:
                 playerRacket.style.top = (parseInt(getComputedStyle(playerRacket).top) + 10) + 'px';
+                break;
+            case 32:
+                stopMovingBall();
                 break;
         }
     }
@@ -136,7 +121,7 @@
     }
 
     function toRadians(angle) {
-        return angle * (Math.PI / 180);
+        return -angle * (Math.PI / 180);
     }
     function getXOffset(angle) {
         return Math.cos(toRadians(angle))
@@ -146,18 +131,28 @@
         return Math.sin(toRadians(angle))
     }
 
+    function getIncreasedAngle(angle) {
+        return (angle + 90 + Math.random() * 5) % 360
+    }
+
+    function getDecreasedAngle(angle) {
+        return (360 + angle - 90 - Math.random() * 5) % 360
+    }
+
     let angle = 20
-    let xPos = Math.round(rect.top + 100)
-    let yPos = Math.round(rect.left + 100)
-    const MULT = 1.5
+    let xPos = Math.round(rect.left + 100)
+    let yPos = Math.round(rect.top + 100)
 
     function moveBall() {
         if (parseInt(getComputedStyle(ball).left) > rect.right - ball.offsetWidth) {
+            console.log("right wall", angle)
             if (angle >= 0 && angle < 90) {
-                angle += 90
+                angle = getIncreasedAngle(angle)
             } else {
-                angle -= 90
+                angle = getDecreasedAngle(angle)
             }
+            xPos -= 5
+            // ball.style.left = Math.round(xPos) + 'px';
         }
 
         if (parseInt(getComputedStyle(ball).left) > rect.right - 100) {
@@ -165,50 +160,65 @@
         }
 
         if (parseInt(getComputedStyle(ball).left) < rect.left + 5) {
+            console.log("left wall", angle)
             const racketTop = parseInt(getComputedStyle(playerRacket).top)
             const ballTop = parseInt(getComputedStyle(ball).top)
 
             if (Math.abs(racketTop - ballTop) > 100) {
-                clearInterval(ballInter)
+                stopMovingBall();
             }
 
             if (angle >= 90 && angle < 180) {
-                angle -= 90
+                angle = getDecreasedAngle(angle)
             } else {
-                angle += 90
+                angle = getIncreasedAngle(angle)
             }
+            xPos += 5
+            // ball.style.left = Math.round(xPos) + 'px';
         }
 
         if (parseInt(getComputedStyle(ball).top) > rect.bottom - ball.offsetWidth) {
+            console.log("bottom wall", angle)
             if (angle >= 180 && angle < 270) {
-                angle -= 90
+                angle = getDecreasedAngle(angle)
             } else {
-                angle += 90
+                angle = getIncreasedAngle(angle)
+
             }
+            yPos -= 5
+            // ball.style.top = Math.round(yPos) + 'px';
         }
 
         if (parseInt(getComputedStyle(ball).top) < rect.top + 5) {
+            console.log("top wall", angle)
             if (angle >= 0 && angle < 90) {
-                angle -= 90
+                angle = getDecreasedAngle(angle)
             } else {
-                angle += 90
+                angle = getIncreasedAngle(angle)
             }
+            yPos += 5
+            // ball.style.top = Math.round(yPos) + 'px';
         }
 
-        xPos += getYOffset(angle)
-        yPos += getXOffset(angle)
+        xPos += getXOffset(angle)
+        yPos += getYOffset(angle)
 
-        ball.style.top = Math.round(xPos) + 'px';
-        ball.style.left = Math.round(yPos) + 'px';
-        arrow.style.transform = "rotate(" + (90 + angle) + "deg)"
+        ball.style.top = Math.round(yPos) + 'px';
+        ball.style.left = Math.round(xPos) + 'px';
+        arrow.style.transform = "rotate(" + (-angle) + "deg)"
+
+        ballInfo.innerHTML = Math.round(angle * 100) / 100
     }
     moveBallSelection()
-
-
 
     function stopMovingRacket(evt) {
         clearInterval(racketInter)
         racketInter = null;
+    }
+
+    function stopMovingBall() {
+        clearInterval(ballInter)
+        ballInter = null;
     }
 
     window.addEventListener('keydown', moveRacketSelection);
